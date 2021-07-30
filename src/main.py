@@ -16,7 +16,7 @@ from preprocessor import Preprocessor
 from deslant import deslant
 from deslant_main import parse_args
 from nlp_main import nlp_main
-
+from nlp_main import Regex
 class FilePaths:
     """Filenames and paths to data."""
     fn_char_list = '../model/charList.txt'
@@ -125,7 +125,7 @@ def validate(model: Model, loader: DataLoaderIAM, line_mode: bool) -> Tuple[floa
     return char_error_rate, word_accuracy
 
 
-def infer(model: Model, fn_img: Path,new_new_list:List, list_of_recog_answer: List) -> None:
+def infer(model: Model, fn_img: Path,locations:dict, list_of_recog_answer: list) -> None:
     # """Recognizes text in image provided by file path."""
     # """Recognizes text in image provided by file path."""
     # img = cv2.imread(fn_img, cv2.IMREAD_GRAYSCALE)
@@ -144,8 +144,10 @@ def infer(model: Model, fn_img: Path,new_new_list:List, list_of_recog_answer: Li
     img = cv2.imread(fn_img, cv2.IMREAD_GRAYSCALE)
     img = img[820:2800,200:2800]
     # img = cv2.resize(img, (600, 400))
-    print(img.shape)
+    # print(img.shape)
     copy = img.copy()
+    copy3 = cv2.imread(fn_img)
+    copy3=copy3[820:2800,200:2800]
     parsed = parse_args()
     answer=''
 
@@ -205,29 +207,30 @@ def infer(model: Model, fn_img: Path,new_new_list:List, list_of_recog_answer: Li
         counter+=1
         line_seg[index].append(c)
 
-    max_y_h=[]
-    max_y_h.append(0)
-    counter2 =1
-    for i in line_seg:
-        # print('hi'+str(counter2))
+    # max_y_h=[]
+    # max_y_h.append(0)
+    # counter2 =1
+    # for i in line_seg:
+    #     # print('hi'+str(counter2))
 
-        max_y_h.append(0)
-        for c in i:
-            # print('hi'+str(counter2))
-            x, y, w, h = cv2.boundingRect(c)
-            # print(y+h)
-            if(y+h>max_y_h[counter2]):
-                max_y_h[counter2]=y+h
-        counter2+=1
+    #     max_y_h.append(0)
+    #     for c in i:
+    #         # print('hi'+str(counter2))
+    #         x, y, w, h = cv2.boundingRect(c)
 
-    # print('hi1')
-    for i in range(1,len(max_y_h)):
-        # print('hi'+str(i))
-        print(max_y_h[i])
-        # print(max_y_h[i-1])
-        # print(copy2.shape)
-        line_img = copy[max_y_h[i-1]:max_y_h[i],:]
-        # cv2.imshow('line_img',line_img)
+    #         # print(y+h)
+    #         if(y+h>max_y_h[counter2]):
+    #             max_y_h[counter2]=y+h
+    #     counter2+=1
+
+    # # print('hi1')
+    # for i in range(1,len(max_y_h)):
+    #     # print('hi'+str(i))
+    #     print(max_y_h[i])
+    #     # print(max_y_h[i-1])
+    #     # print(copy2.shape)
+    #     line_img = copy[max_y_h[i-1]:max_y_h[i],:]
+    #     # cv2.imshow('line_img',line_img)
 
 
     # print(new_list[0])
@@ -242,7 +245,7 @@ def infer(model: Model, fn_img: Path,new_new_list:List, list_of_recog_answer: Li
             # print(y)
             ROI = copy[y:y+h, x:x+w]
             # cv2.imshow('ROI',ROI)
-            cv2.imwrite('D:\summer-project\model3\SimpleHTR\data\slanted\img_{}.png'.format(ROI_number),ROI)
+            # cv2.imwrite('D:\summer-project\model3\SimpleHTR\data\slanted\img_{}.png'.format(ROI_number),ROI)
             ROI = deslant(ROI,
                       optim_algo=parsed.optim_algo,
                       lower_bound=parsed.lower_bound,
@@ -250,7 +253,7 @@ def infer(model: Model, fn_img: Path,new_new_list:List, list_of_recog_answer: Li
                       num_steps=parsed.num_steps,
                       bg_color=parsed.bg_color)
             # cv2.imshow('ROI',ROI)
-            cv2.imwrite('D:\summer-project\model3\SimpleHTR\data\deslanted\img_{}.png'.format(ROI_number),ROI)
+            # cv2.imwrite('D:\summer-project\model3\SimpleHTR\data\deslanted\img_{}.png'.format(ROI_number),ROI)
             ROI_number += 1
             assert ROI is not None
 
@@ -261,12 +264,32 @@ def infer(model: Model, fn_img: Path,new_new_list:List, list_of_recog_answer: Li
             recognized, probability = model.infer_batch(batch, True)
             answer+=str(recognized[0])+' '
             list_of_recog_answer.append(str(recognized[0]))
+            temp_string =Regex(str(recognized[0])).strip()
+            # print(temp_string)
+            locations.setdefault(temp_string, [])
+            locations[temp_string].append(c)
 
         # print(f'Recognized: "{recognized[0]}"')
         # print(f'Probability: {probability[0]}')
 
     print(answer)
-    return answer
+    return answer,copy3
+
+def print_matched_contours(keyword_match_list:list,locations:dict,image,name:str,colors_tuple:list):
+    index=0
+    for words in keyword_match_list:
+        for c in locations[words]:
+            x,y,w,h = cv2.boundingRect(c)
+            cv2.rectangle(image, (x, y), (x + w, y + h),colors_tuple[index], 3)
+        index+=1
+    
+    cv2.imwrite('D:\summer-project\HandEval\data\matched-'+name+'.png',image)
+
+def create_colors(s:int):
+    colors_list = [list(np.random.choice(range(256), size=3))for k in range(s)]
+    colors_tuple=[(colors[0].item(),colors[1].item(),colors[2].item()) for colors in colors_list]
+
+    return colors_tuple
 
 def main():
     """Main function."""
@@ -354,18 +377,22 @@ def main():
         # print(args.img_files[0])
         # infer(model, args.img_file)
         list_of_teacher_answer=[]
-        student_answer_locations=[]
-        teacher_answer_locations=[]
         list_of_student_answer=[]
+        student_answer_locations={}
+        teacher_answer_locations={}
         start_time = time.time()
         # python main.py --student_answer D:\summer-project\handwritten-dataset\formsA-D.tgz\formsA-D\a01-096u.png --teacher_answer D:\summer-project\handwritten-dataset\formsA-D.tgz\formsA-D\a01-026.png
-        teacher_answer=infer(model, args.teacher_answer,teacher_answer_locations,list_of_teacher_answer)
-        student_answer=infer(model, args.student_answer,student_answer_locations,list_of_student_answer)
+        teacher_answer,teacher_img=infer(model, args.teacher_answer,teacher_answer_locations,list_of_teacher_answer)
+        student_answer,student_img=infer(model, args.student_answer,student_answer_locations,list_of_student_answer)
         # print(student_answer)
         # print(teacher_answer)
-        # print(list_of_student_answer)
-        # print(student_answer_locations)
-        nlp_main(teacher_answer,student_answer)
+        print(list_of_teacher_answer)
+        # print(teacher_answer_locations)
+        keyword_match_list=nlp_main(teacher_answer,student_answer)
+        colors_tuple = create_colors(len(keyword_match_list))
+        print_matched_contours(keyword_match_list,teacher_answer_locations,teacher_img,'teacher',colors_tuple)
+        print_matched_contours(keyword_match_list,student_answer_locations,student_img,'student',colors_tuple)
+        
         print("--- %s seconds ---" % (time.time() - start_time))
 
 if __name__ == '__main__':

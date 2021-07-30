@@ -27,12 +27,12 @@ from scipy import spatial
 def extract_nouns_adj(lines):
   tokenized = nltk.word_tokenize(lines)
   list_word_tags = nltk.pos_tag(tokenized)
-  # function to test if something is a noun or adj or a verb
+  # function to test if something is a noun or adj
   is_noun_adj = lambda pos: pos[:2] == 'NN' or pos[:2] == 'JJ' or pos[:2] == 'VB'
   # do the nlp stuff
   # tokenized = nltk.word_tokenize(lines)
   nouns_adjs = [(word,pos) for (word, pos) in list_word_tags if is_noun_adj(pos)] 
-  print(nouns_adjs)
+  # print(nouns_adjs)
   return nouns_adjs
 
 def Regex(article_text):   
@@ -69,15 +69,17 @@ def semantic_similarity(corpus,queries):
       for idx, distance in results[0:closest_n]:
           print(corpus[idx].strip(), "(Score: %.4f)" % (1-distance))
 
+from scipy import spatial
+def createKeywordsVectors(keyword, nlp):
+    doc = nlp(keyword)  # convert to document object
+
+    return doc.vector
+
 # method to find cosine similarity
 def cosineSimilarity(vect1, vect2):
     # return cosine distance
     return 1 - spatial.distance.cosine(vect1, vect2)
 
-def createKeywordsVectors(keyword, nlp):
-    doc = nlp(keyword)  # convert to document object
-
-    return doc.vector
 
 # method to find similar words
 def getSimilarWords(keyword_and_pos, nlp):
@@ -102,12 +104,13 @@ def getSimilarWords(keyword_and_pos, nlp):
     top_similar_words = [word for (word,tag) in [nltk.pos_tag([word])[0] for word in top_similar_words] if is_noun_adj(tag)]
     
     top_similar_words = top_similar_words[:3]
-
+    # print(top_similar_words)
 
     top_similar_words.append(keyword)
     # print('4')
     for token in nlp(keyword):
         top_similar_words.insert(0, token.lemma_)
+        # print(token.lemma_)
 
     top_similar_words = list(set(top_similar_words))
     # print('5')
@@ -121,13 +124,14 @@ def keyword_count(test_list):
   verb_count = 0
   for (text,tag) in test_list:
     tag=tag[:2]
-    print(str(text)+': '+tag)
+    # print(str(text)+': '+tag)
     if tag == 'NN':
       noun_count+=1
     elif tag == 'JJ':
       adj_count+=1
-    else :
+    else:
       verb_count+=1
+  # print(noun_count+':'+adj_count+':'+verb_count)
   return noun_count,adj_count,verb_count
 
 def match_keywords(student_answer,teacher_answer):
@@ -135,13 +139,14 @@ def match_keywords(student_answer,teacher_answer):
   new_teacher_answer = ' '.join([lemmatizer.lemmatize(t) for t in word_tokenize(Regex(teacher_answer)) if t not in stop_words])
   test_list = []
   test_list = list(set(extract_nouns_adj(new_teacher_answer)))
-  noun_count,adj_count,verb_count= keyword_count(test_list)
+  noun_count,adj_count,verb_count = keyword_count(test_list)
   print("Keywords found in teacher's answer:")
   print(test_list)
+  
   new_test_list = []
   print("Similar word generation for the keywords:")
   for words in test_list:
-    print(words)
+    # print(words)
     sim_words = getSimilarWords(words,nlp)
     print(str(words)+':'+str(sim_words))
     # print(str(words))
@@ -152,8 +157,11 @@ def match_keywords(student_answer,teacher_answer):
   test_list = list(set(test_list))
   final_test_list = [(w,tag) for (w,tag) in test_list if w not in stop_words] 
   patterns = [nlp(text) for (text,tag) in final_test_list]
+  Dict={}
+  for (w,tag) in final_test_list:
+    Dict[w]=tag
   # noun_count,adj_count,verb_count= keyword_count(final_test_list)
-  print(str(noun_count)+" "+str(verb_count)+" "+str(adj_count))
+  print(str(noun_count)+":"+str(adj_count)+":"+str(verb_count))
   phrase_matcher.add('FinalPhraseMatcher', None, *patterns)
   sentence = nlp (student_answer)
 
@@ -163,7 +171,29 @@ def match_keywords(student_answer,teacher_answer):
     span = sentence[start:end]                   
     print(str(span.text)+" : word location in student's answer: "+str(start))
 
-  return matched_phrases
+  return matched_phrases,Dict,noun_count,adj_count,verb_count
+
+def marks_eval(student_answer,keyword_match_list,Dict,noun_count,adj_count,verb_count):
+  n_count=0
+  a_count=0
+  v_count=0
+  noun_check = lambda x:x[:2]=='NN'
+  adj_check = lambda x:x[:2]=='JJ'
+  verb_check = lambda x:x[:2]=='VB'
+  for word in keyword_match_list:
+    print(Dict[word])
+    if noun_check(Dict[word]):
+      n_count+=1
+    elif verb_check(Dict[word]):
+      v_count+=1
+    elif adj_check(Dict[word]):
+      a_count+=1
+  print(str(noun_count)+":"+str(adj_count)+":"+str(verb_count))
+  print(str(n_count)+":"+str(a_count)+":"+str(v_count))
+  weight = 1/(float)(2*noun_count + adj_count + verb_count)
+  marks = (2*n_count + a_count + v_count)*weight
+  print(weight)
+  print(marks)
 
 def nlp_main(teacher_answer:str, student_answer:str):
 # def main():
@@ -171,10 +201,18 @@ def nlp_main(teacher_answer:str, student_answer:str):
     # teacher_answer = 'Encryption of the message must be done to prevent hacking. Privacy of the senders and receiver parties must be ensured. The integrity of the message must remain and should not be manipulated. Verification of the parties concerned is necessary.'
     processed_student_answer = text_processing(student_answer)
     processed_teacher_answer = text_processing(teacher_answer)
-    print(getSimilarWords(('privacy','NN'), nlp))
-    semantic_similarity(processed_student_answer,processed_teacher_answer)
-    matched_phrases=match_keywords(Regex(student_answer),Regex(teacher_answer))
-    tokenised_answer = word_tokenize(Regex(student_answer))
+    matched_phrases,Dict,noun_count,adj_count,verb_count = match_keywords(Regex(student_answer),Regex(teacher_answer))
+    sentence = nlp (Regex(student_answer))
+    keyword_match_list=list(set([sentence[start:end].text for match_id, start, end in matched_phrases]))
+    print(keyword_match_list)
+    # matched_contours=[locations[words] for words in keyword_match_list]
+    # for c in matched_contours:
+    #   x, y, w, h = cv2.boundingRect(c)
+    #   print(x+' '+y+' '+w+' '+h+' ')
+    marks_eval(Regex(student_answer),keyword_match_list,Dict,noun_count,adj_count,verb_count)
+    # tokenised_answer = word_tokenize(Regex(student_answer))
+    return keyword_match_list
+
 
 # nlp_main('H')
     
