@@ -4,6 +4,7 @@ from typing import List, Tuple
 
 import numpy as np
 import tensorflow as tf
+import keras
 
 from dataloader_iam import Batch
 
@@ -52,6 +53,7 @@ class Model:
 
         # initialize TF
         self.sess, self.saver = self.setup_tf()
+
 
     def setup_cnn(self) -> None:
         """Create CNN layers."""
@@ -163,7 +165,25 @@ class Model:
         # load saved model if available
         if latest_snapshot:
             print('Init with stored values from ' + latest_snapshot)
+            init=tf.compat.v1.global_variables_initializer() 
+            sess.run(init)
             saver.restore(sess, latest_snapshot)
+
+            # Freeze the graph
+            output_node_names = [n.name for n in tf.compat.v1.get_default_graph().as_graph_def().node]
+            frozen_graph_def = tf.compat.v1.graph_util.convert_variables_to_constants(
+                sess,
+                sess.graph_def,
+                output_node_names)
+
+            # Save the frozen graph
+            with open('output_graph2.pb', 'wb') as f:
+                f.write(frozen_graph_def.SerializeToString())
+            # save_path = saver.save(sess, "../tmp/model.ckpt")
+            # new_model=tf.keras.model.Model()
+            # new_model
+            # print("Model saved in path: %s" % save_path)
+            # odel.save_weights('/tmp/keras-one.h5')
         else:
             print('Init with new values')
             sess.run(tf.compat.v1.global_variables_initializer())
@@ -293,6 +313,8 @@ class Model:
                          self.seq_len: [max_text_len] * num_batch_elements, self.is_train: False}
             loss_vals = self.sess.run(eval_list, feed_dict)
             probs = np.exp(-loss_vals)
+
+        # self.save_weights('../tmp/keras-one.h5')
 
         # dump the output of the NN to CSV file(s)
         if self.dump:

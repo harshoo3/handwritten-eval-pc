@@ -48,27 +48,6 @@ def text_processing(answer):
   print(answer)
   return answer
 
-# function that computes semantic similarities between the answers
-def semantic_similarity(corpus,queries):
-  corpus_embeddings = model.encode(corpus)
-  query_embeddings = model.encode(queries)
-  closest_n = 3
-  for query, query_embedding in zip(queries, query_embeddings):
-      distances = scipy.spatial.distance.cdist([query_embedding], corpus_embeddings, "cosine")[0] 
-      #find the cosine similarity 
-      # print("\n\n======================\n\n")
-      results = zip(range(len(distances)), distances)
-      # print(results)
-      results = sorted(results, key=lambda x: x[1])
-      # print("\n\n======================\n\n")
-      # print(results)
-      print("\n\n======================\n\n")
-      print("Query:", query)
-      print("\nTop 3 most similar sentences in corpus:")
-
-      for idx, distance in results[0:closest_n]:
-          print(corpus[idx].strip(), "(Score: %.4f)" % (1-distance))
-
 from scipy import spatial
 def createKeywordsVectors(keyword, nlp):
     doc = nlp(keyword)  # convert to document object

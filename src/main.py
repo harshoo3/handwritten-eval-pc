@@ -138,9 +138,8 @@ def infer(model: Model, fn_img: Path,locations:dict, list_of_recog_answer: list)
     # recognized, probability = model.infer_batch(batch, True)
     # print(f'Recognized: "{recognized[0]}"')
     # # print(f'Probability: {probability[0]}')
-    # keras_file = "My_saved_Model.h5"
-    # keras.models.save_model(model , keras_file)
-    # tf.keras.models.save_model('../my_model',save_format='h5')
+
+    # tf.keras.models.save_model('../my_model.h5',save_format='h5')
     img = cv2.imread(fn_img, cv2.IMREAD_GRAYSCALE)
     img = img[820:2800,200:2800]
     # img = cv2.resize(img, (600, 400))
@@ -234,7 +233,7 @@ def infer(model: Model, fn_img: Path,locations:dict, list_of_recog_answer: list)
 
 
     # print(new_list[0])
-    ROI_number=0
+    # ROI_number=0
     for j in range(index+1):
         args = np.argsort([cv2.boundingRect(i)[0] for i in line_seg[j]])
         # print(abcd)
@@ -254,7 +253,7 @@ def infer(model: Model, fn_img: Path,locations:dict, list_of_recog_answer: list)
                       bg_color=parsed.bg_color)
             # cv2.imshow('ROI',ROI)
             # cv2.imwrite('D:\summer-project\model3\SimpleHTR\data\deslanted\img_{}.png'.format(ROI_number),ROI)
-            ROI_number += 1
+            # ROI_number += 1
             assert ROI is not None
 
             preprocessor = Preprocessor(get_img_size(), dynamic_width=True, padding=16)
@@ -316,17 +315,20 @@ def main():
     decoder_type = decoder_mapping[args.decoder]
 
     # meta_path = '../model/snapshot-33.meta' # Your .meta file
-    # output_node_names = [n.name for n in tf.compat.v1.get_default_graph().as_graph_def().node]    # Output nodes
+    # # output_node_names = [n.name for n in tf.compat.v1.get_default_graph().as_graph_def().node]    # Output nodes
 
     # with tf.compat.v1.Session() as sess:
-    #     # Restore the graph
-    #     saver = tf.compat.v1.train.Saver(max_to_keep=1)
-    #     # saver = tf.compat.v1.train.import_meta_graph(meta_path)
+    # #     # Restore the graph
+    # # saver = tf.compat.v1.train.Saver(max_to_keep=1)
+    #     saver = tf.compat.v1.train.import_meta_graph(meta_path)
 
     #     # Load weights
     #     saver.restore(sess,tf.train.latest_checkpoint('../model/'))
+        # init=tf.global_variables_initializer() 
+        # sess.run(init)
 
-        # Freeze the graph
+        # # Freeze the graph
+        # output_node_names = [n.name for n in tf.compat.v1.get_default_graph().as_graph_def().node]
         # frozen_graph_def = tf.compat.v1.graph_util.convert_variables_to_constants(
         #     sess,
         #     sess.graph_def,
@@ -376,6 +378,17 @@ def main():
         model = Model(list(open(FilePaths.fn_char_list).read()), decoder_type, must_restore=True, dump=args.dump)
         # print(args.img_files[0])
         # infer(model, args.img_file)
+        # print(type(model))
+        # converter = tf.lite.TFLiteConverter.from_saved_model('../model/')
+        # tflite_model = converter.convert()
+        sess = tf.compat.v1.Session()  # TF session
+
+        saver = tf.compat.v1.train.Saver(max_to_keep=1)  # saver saves model to file
+        model_dir = '../model/'
+        latest_snapshot = tf.train.latest_checkpoint(model_dir)
+        saver.restore(sess, latest_snapshot)
+
+        print("done")
         list_of_teacher_answer=[]
         list_of_student_answer=[]
         student_answer_locations={}
