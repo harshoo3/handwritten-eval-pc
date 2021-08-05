@@ -107,7 +107,7 @@ def deslant(img: np.ndarray,
         best_shear_val = res.x[0]
 
     res_img = _shear_img(img, best_shear_val, bg_color, cv2.INTER_LINEAR)
-    print(type(res_img))
-    cv2.imshow('res_img',res_img)
+    # print(type(res_img))
+    # cv2.imshow('res_img',res_img)
     return res_img
     # return DeslantRes(res_img, best_shear_val, candidates)

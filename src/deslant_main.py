@@ -16,7 +16,6 @@ def get_img_files(data_dir: Path) -> List[Path]:
         res += Path(data_dir).files(ext)
     return res
 
-
 def parse_args():
     """Parses command line args."""
     parser = argparse.ArgumentParser()
@@ -26,8 +25,11 @@ def parse_args():
     parser.add_argument('--upper_bound', type=float, default=2)
     parser.add_argument('--num_steps', type=float, default=20)
     parser.add_argument('--bg_color', type=int, default=255)
-    parser.add_argument('--student_answer', help='Student Answer Image used for inference.', type=Path, default='../data/try4.jpeg')
-    parser.add_argument('--teacher_answer', help='Teacher Answer Image used for inference.', type=Path, default='../data/line.png')
+    parser.add_argument('--student_answer_text', help='Student Answer String used for inference.', type=str, default=' ')
+    parser.add_argument('--teacher_answer_text', help='Teacher Answer String used for inference.', type=str, default=' ')
+    parser.add_argument('--student_answer_image', help='Student Answer Image used for inference.', type=Path, default='../data/try4.jpeg')
+    parser.add_argument('--marks', help='Marks alloted for this question', type=int, required=True)
+    parser.add_argument('--teacher_answer_image', help='Teacher Answer Image used for inference.', type=Path, default='../data/line.png')
     parser.add_argument('--mode', choices=['train', 'validate', 'infer'], default='infer')
     parser.add_argument('--decoder', choices=['bestpath', 'beamsearch', 'wordbeamsearch'], default='bestpath')
     parser.add_argument('--batch_size', help='Batch size.', type=int, default=100)

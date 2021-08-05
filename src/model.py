@@ -14,8 +14,8 @@ tf.compat.v1.disable_eager_execution()
 
 class DecoderType:
     """CTC decoder types."""
-    BestPath = 0
-    BeamSearch = 1
+    # BestPath = 0
+    # BeamSearch = 1
     WordBeamSearch = 2
 
 
@@ -24,7 +24,7 @@ class Model:
 
     def __init__(self,
                  char_list: List[str],
-                 decoder_type: str = DecoderType.BestPath,
+                 decoder_type: str = DecoderType.WordBeamSearch,
                  must_restore: bool = False,
                  dump: bool = False) -> None:
         """Init model: add CNN, RNN and CTC and initialize TF."""
@@ -126,26 +126,19 @@ class Model:
         self.loss_per_element = tf.compat.v1.nn.ctc_loss(labels=self.gt_texts, inputs=self.saved_ctc_input,
                                                          sequence_length=self.seq_len, ctc_merge_repeated=True)
 
-        # best path decoding or beam search decoding
-        if self.decoder_type == DecoderType.BestPath:
-            self.decoder = tf.nn.ctc_greedy_decoder(inputs=self.ctc_in_3d_tbc, sequence_length=self.seq_len)
-        elif self.decoder_type == DecoderType.BeamSearch:
-            self.decoder = tf.nn.ctc_beam_search_decoder(inputs=self.ctc_in_3d_tbc, sequence_length=self.seq_len,
-                                                         beam_width=50)
-        # word beam search decoding (see https://github.com/githubharald/CTCWordBeamSearch)
-        elif self.decoder_type == DecoderType.WordBeamSearch:
-            # prepare information about language (dictionary, characters in dataset, characters forming words)
-            chars = ''.join(self.char_list)
-            word_chars = open('../model/wordCharList.txt').read().splitlines()[0]
-            corpus = open('../data/corpus.txt').read()
+        
+        # prepare information about language (dictionary, characters in dataset, characters forming words)
+        chars = ''.join(self.char_list)
+        word_chars = open('../model/wordCharList.txt').read().splitlines()[0]
+        corpus = open('../data/corpus.txt').read()
 
-            # decode using the "Words" mode of word beam search
-            from word_beam_search import WordBeamSearch
-            self.decoder = WordBeamSearch(50, 'Words', 0.0, corpus.encode('utf8'), chars.encode('utf8'),
-                                          word_chars.encode('utf8'))
+        # decode using the "Words" mode of word beam search
+        from word_beam_search import WordBeamSearch
+        self.decoder = WordBeamSearch(50, 'Words', 0.0, corpus.encode('utf8'), chars.encode('utf8'),
+                                        word_chars.encode('utf8'))
 
-            # the input to the decoder must have softmax already applied
-            self.wbs_input = tf.nn.softmax(self.ctc_in_3d_tbc, axis=2)
+        # the input to the decoder must have softmax already applied
+        self.wbs_input = tf.nn.softmax(self.ctc_in_3d_tbc, axis=2)
 
     def setup_tf(self) -> Tuple[tf.compat.v1.Session, tf.compat.v1.train.Saver]:
         """Initialize TF."""
@@ -165,20 +158,20 @@ class Model:
         # load saved model if available
         if latest_snapshot:
             print('Init with stored values from ' + latest_snapshot)
-            init=tf.compat.v1.global_variables_initializer() 
-            sess.run(init)
+            # init=tf.compat.v1.global_variables_initializer() 
+            # sess.run(init)
             saver.restore(sess, latest_snapshot)
 
             # Freeze the graph
-            output_node_names = [n.name for n in tf.compat.v1.get_default_graph().as_graph_def().node]
-            frozen_graph_def = tf.compat.v1.graph_util.convert_variables_to_constants(
-                sess,
-                sess.graph_def,
-                output_node_names)
+            # output_node_names = [n.name for n in tf.compat.v1.get_default_graph().as_graph_def().node]
+            # frozen_graph_def = tf.compat.v1.graph_util.convert_variables_to_constants(
+            #     sess,
+            #     sess.graph_def,
+            #     output_node_names)
 
             # Save the frozen graph
-            with open('output_graph2.pb', 'wb') as f:
-                f.write(frozen_graph_def.SerializeToString())
+            # with open('output_graph2.pb', 'wb') as f:
+            #     f.write(frozen_graph_def.SerializeToString())
             # save_path = saver.save(sess, "../tmp/model.ckpt")
             # new_model=tf.keras.model.Model()
             # new_model
@@ -214,22 +207,7 @@ class Model:
         """Extract texts from output of CTC decoder."""
 
         # word beam search: already contains label strings
-        if self.decoder_type == DecoderType.WordBeamSearch:
-            label_strs = ctc_output
-
-        # TF decoders: label strings are contained in sparse tensor
-        else:
-            # ctc returns tuple, first element is SparseTensor
-            decoded = ctc_output[0][0]
-
-            # contains string of labels for each batch element
-            label_strs = [[] for _ in range(batch_size)]
-
-            # go over all indices and save mapping: batch -> values
-            for (idx, idx2d) in enumerate(decoded.indices):
-                label = decoded.values[idx]
-                batch_element = idx2d[0]  # index according to [b,t]
-                label_strs[batch_element].append(label)
+        label_strs = ctc_output
 
         # map labels to chars for all batch elements
         return [''.join([self.char_list[c] for c in labelStr]) for labelStr in label_strs]
@@ -275,10 +253,7 @@ class Model:
         # put tensors to be evaluated into list
         eval_list = []
 
-        if self.decoder_type == DecoderType.WordBeamSearch:
-            eval_list.append(self.wbs_input)
-        else:
-            eval_list.append(self.decoder)
+        eval_list.append(self.wbs_input)
 
         if self.dump or calc_probability:
             eval_list.append(self.ctc_in_3d_tbc)
@@ -294,11 +269,7 @@ class Model:
         eval_res = self.sess.run(eval_list, feed_dict)
 
         # TF decoders: decoding already done in TF graph
-        if self.decoder_type != DecoderType.WordBeamSearch:
-            decoded = eval_res[0]
-        # word beam search decoder: decoding is done in C++ function compute()
-        else:
-            decoded = self.decoder.compute(eval_res[0])
+        decoded = self.decoder.compute(eval_res[0])
 
         # map labels (numbers) to character string
         texts = self.decoder_output_to_text(decoded, num_batch_elements)
