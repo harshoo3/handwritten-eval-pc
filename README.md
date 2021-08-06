@@ -32,14 +32,26 @@ The input images and results shown below.
 
 Teacher's Answer           |  Student's Answer
 :-------------------------:|:-------------------------:
-<img src="./data/images/input1-exp3.png" alt="input2" width="170"/>  |  <img src="./data/images/input1-exp3.png" alt="input2" width="170"/>
+<img src="./data/images/input1-exp3.png" alt="input2" width="250"/>  |  <img src="./data/images/input1-exp3.png" alt="input2" width="250"/>
 <!-- <img src="./data/images/input1-exp3.png" alt="input1" width="170"/>
 <img src="./data/images/input1-exp3.png" alt="input2" width="170"/> -->
 <!-- ![test](./data/images/input1-exp3.png)
 
 <!-- ![test](./data/images/input2-exp3.png) --> 
 
-# Keywords found in 
+### Recognised Text
+[recog](./data/images/interpreted-text-exp3.png)
+
+### Keywords found in Teacher's Answer
+[keywords](./data/images/keywords-exp3.png)
+
+### Matched Keywords' Location and Marks Evaluation
+[eval](./data/images/evaluation-exp3.png)
+
+### Original Images with highlighted matched keywords
+[plot](./data/images/matched-keywords-exp3.png)
+
+
 ## Integrate word beam search decoding
 
 The [word beam search decoder](https://repositum.tuwien.ac.at/obvutwoa/download/pdf/2774578) can be used instead of the two decoders shipped with TF.
