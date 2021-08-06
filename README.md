@@ -33,15 +33,21 @@ Teacher's Answer           |  Student's Answer
 <img src="./data/images/input1-exp3.png" alt="input2" width="400"/>  |  <img src="./data/images/input1-exp3.png" alt="input2" width="400"/>
 
 
-Recognised Text           |  Keywords found in Teacher's Answer
+<!-- Recognised Text           |  Keywords found in Teacher's Answer
 :-------------------------:|:-------------------------:
-<img src="./data/images/interpreted-text-exp3.png" alt="recog" width="400"/> |  <img src="./data/images/keywords-exp3.png" alt="keywords" width="400"/>
+<img src="./data/images/interpreted-text-exp3.png" alt="recog" width="400"/> |  <img src="./data/images/keywords-exp3.png" alt="keywords" width="400"/> -->
+
+### Recognised Text :
+<img src="./data/images/interpreted-text-exp3.png" alt="recog" width="650" />
+
+### Keywords found in Teacher's Answer:
+<img src="./data/images/keywords-exp3.png" alt="keywords" width="650"/>
 
 ### Matched Keywords' Location and Marks Evaluation
-<img src="./data/images/evaluation-exp3.png" alt="eval" width="400"/>
+<img src="./data/images/evaluation-exp3.png" alt="eval" width="500"/>
 
 ### Original Images with highlighted matched keywords
-<img src="./data/images/matched-keywords-exp3.png" alt="plot" width="600"/>
+<img src="./data/images/matched-keywords-exp3.png" alt="plot" width="750"/>
 
 ## Information about model
 
