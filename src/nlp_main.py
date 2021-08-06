@@ -1,31 +1,30 @@
 # !python -m spacy download en_core_web_lg
 # pip install yake
+import regex as re
 import yake
 import math
+from scipy import spatial
+
 import spacy
 from spacy.lang.en import English
 import en_core_web_lg
 nlp = en_core_web_lg.load()
-# nlp = spacy.load('en_core_web_lg')
-from nltk.corpus import wordnet
 from spacy.matcher import PhraseMatcher
 phrase_matcher = PhraseMatcher(nlp.vocab)
+# nlp = spacy.load('en_core_web_lg')
+
 import nltk
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
 from nltk import word_tokenize          
 from nltk.stem import WordNetLemmatizer
-nltk.download('wordnet')
-# pip install -U sentence-transformers
-import regex as re
-import scipy
-from sentence_transformers import SentenceTransformer
-model = SentenceTransformer('bert-base-nli-mean-tokens')
 from nltk.corpus import stopwords
+from nltk.corpus import wordnet
 from nltk.tokenize import word_tokenize
+
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+nltk.download('wordnet')
 nltk.download('stopwords')
 stop_words = set(stopwords.words('english'))
-from scipy import spatial
 
 #function to extract keywords
 def extract_nouns_adj(lines):

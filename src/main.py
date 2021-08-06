@@ -4,11 +4,9 @@ from typing import Tuple, List
 import numpy as np
 import cv2
 import editdistance
-import keras
 from path import Path
 import tensorflow as tf
 import time
-from tensorflow.keras.models import Sequential
 import matplotlib.pyplot as plt
 
 from dataloader_iam import DataLoaderIAM, Batch
@@ -180,6 +178,7 @@ def main():
     parser.add_argument('--teacher_answer_text', help='Teacher Answer String used for inference.', type=str, default=' ')
     parser.add_argument('--student_answer_image', help='Student Answer Image used for inference.', type=Path, default='../data/try4.jpeg')
     parser.add_argument('--teacher_answer_image', help='Teacher Answer Image used for inference.', type=Path, default='../data/line.png')
+    parser.add_argument('--dump', help='Dump output of NN to CSV file(s).', action='store_true')
     args = parser.parse_args()
 
     decoder_type = DecoderType.WordBeamSearch
