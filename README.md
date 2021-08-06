@@ -30,9 +30,14 @@ The input images and results shown below.
 
 ### Input images:
 
-![test](./data/images/input1-exp3.png)
+Teacher's Answer           |  Student's Answer
+:-------------------------:|:-------------------------:
+<img src="./data/images/input1-exp3.png" alt="input2" width="170"/>  |  <img src="./data/images/input1-exp3.png" alt="input2" width="170"/>
+<!-- <img src="./data/images/input1-exp3.png" alt="input1" width="170"/>
+<img src="./data/images/input1-exp3.png" alt="input2" width="170"/> -->
+<!-- ![test](./data/images/input1-exp3.png)
 
-![test](./data/images/input2-exp3.png)
+<!-- ![test](./data/images/input2-exp3.png) --> 
 
 # Keywords found in 
 ## Integrate word beam search decoding
