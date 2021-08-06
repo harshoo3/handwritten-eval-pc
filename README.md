@@ -1,60 +1,40 @@
-# Handwritten Text Recognition with TensorFlow
+# HandEval, an automated Handwritten-answer Evaluator
 
-* **Update 2021/2: recognize text on line level (multiple words)**
-* **Update 2021/1: more robust model, faster dataloader, word beam search decoder also available for Windows**
-* **Update 2020: code is compatible with TF2**
+The objective of the project is to approach development in Automated grading/evaluation of  the  Handwritten  Answers  presented  by  a  student. Evaluation takes place using a reference answer provided by the teacher whether in text form or the image of handwritten text. 
 
+The project can be divided into 2 parts namely OCR (Optical Character Recognition) and NLP(Natural Language Processing).
 
-Handwritten Text Recognition (HTR) system implemented with TensorFlow (TF) and trained on the IAM off-line HTR dataset.
-The model takes **images of single words or text lines (multiple words) as input** and **outputs the recognized text**.
-3/4 of the words from the validation-set are correctly recognized, and the character error rate is around 10%.
+### OCR 
 
-![htr](./doc/htr.png)
+![ocr](./data/images/ocr-pipeline.png)
 
+## NLP
+
+![nlp](./data/images/nlp.png)
 
 ## Run demo
-
-* Download one of the pretrained models
-  * [Model trained on word images](https://www.dropbox.com/s/mya8hw6jyzqm0a3/word-model.zip?dl=1): 
-    only handles single words per image, but gives better results on the IAM word dataset
-  * [Model trained on text line images](https://www.dropbox.com/s/7xwkcilho10rthn/line-model.zip?dl=1):
-    can handle multiple words in one image
-* Put the contents of the downloaded zip-file into the `model` directory of the repository  
+ 
 * Go to the `src` directory 
 * Run inference code:
-  * Execute `python main.py` to run the model on an image of a word
-  * Execute `python main.py --img_file ../data/line.png` to run the model on an image of a text line
-
-The input images, and the expected outputs are shown below when the text line model is used.
-
-![test](./data/word.png)
-```
-> python main.py
-Init with stored values from ../model/snapshot-13
-Recognized: "word"
-Probability: 0.9806370139122009
-```
-
-![test](./data/line.png)
-
-```
-> python main.py --img_file ../data/line.png
-Init with stored values from ../model/snapshot-13
-Recognized: "or work on line level"
-Probability: 0.6674373149871826
-```
+  * Execute `python main.py --student_answer_image PATH_TO_STUDENT_ANSWER_IMAGE --teacher_answer_image PATH_TO_STUDENT_ANSWER_IMAGE` to run the model on those images
+  * Execute `python main.py --student_answer_text STRING_CONTAINING_STUDENT_ANSWER --teacher_answer_text STRING_CONTAINING_TEACHER_ANSWER` if text is already decoded to run the model on the text 
 
 ## Command line arguments
-* `--mode`: select between "train", "validate" and "infer". Defaults to "infer".
-* `--decoder`: select from CTC decoders "bestpath", "beamsearch" and "wordbeamsearch". Defaults to "bestpath". For option "wordbeamsearch" see details below.
-* `--batch_size`: batch size.
-* `--data_dir`: directory containing IAM dataset (with subdirectories `img` and `gt`).
-* `--fast`: use LMDB to load images faster.
-* `--line_mode`: train reading text lines instead of single words.
-* `--img_file`: image that is used for inference.
-* `--dump`: dumps the output of the NN to CSV file(s) saved in the `dump` folder. Can be used as input for the [CTCDecoder](https://github.com/githubharald/CTCDecoder).
+* `--student_answer_image`: the path to the image with handwritten student answer
+* `--teacher_answer_image`: the path to the image with handwritten teacher(reference) answer
+* `--student_answer_text`: a string containing student answer
+* `--teacher_answer_text`: a string containing teacher(reference) answer
+* `--marks`: (Required) an integer denoting maximum marks alloted to the question
 
+The input images and results shown below.
 
+### Input images:
+
+![test](./data/images/input1-exp3.png)
+
+![test](./data/images/input2-exp3.png)
+
+# Keywords found in 
 ## Integrate word beam search decoding
 
 The [word beam search decoder](https://repositum.tuwien.ac.at/obvutwoa/download/pdf/2774578) can be used instead of the two decoders shipped with TF.
