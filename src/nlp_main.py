@@ -1,6 +1,7 @@
 # !python -m spacy download en_core_web_lg
 # pip install yake
 import yake
+import math
 import spacy
 from spacy.lang.en import English
 import en_core_web_lg
@@ -140,11 +141,11 @@ def match_keywords(student_answer,teacher_answer):
   print(test_list)
   
   new_test_list = []
-  # print("Similar word generation for the keywords:")
+  print("Similar word generation for the keywords:")
   for words in test_list:
     # print(words)
     sim_words = getSimilarWords(words,nlp)
-    # print(str(words)+':'+str(sim_words))
+    print(str(words)+':'+str(sim_words))
     # print(str(words))
     [new_test_list.append((w,words[1])) for w in sim_words]
   for words in new_test_list:
@@ -166,7 +167,7 @@ def match_keywords(student_answer,teacher_answer):
   for match_id, start, end in matched_phrases:
     string_id = nlp.vocab.strings[match_id]  
     span = sentence[start:end]                   
-    # print(str(span.text)+" : word location in student's answer: "+str(start))
+    print(str(span.text)+" : word location in student's answer: "+str(start))
 
   return matched_phrases,Dict,noun_count,adj_count,verb_count
 
@@ -185,16 +186,17 @@ def marks_eval(student_answer,keyword_match_list,Dict,noun_count,adj_count,verb_
       v_count+=1
     elif adj_check(Dict[word]):
       a_count+=1
+  print("Total Nouns: Adj: Verbs")
   print(str(noun_count)+":"+str(adj_count)+":"+str(verb_count))
+  print("Matched Nouns: Adj: Verbs")
   print(str(n_count)+":"+str(a_count)+":"+str(v_count))
-  weight = 1/(float)(noun_count + adj_count + verb_count)
+  weight = 1/(float)(2*noun_count + adj_count + verb_count)
   fraction = (2*n_count + a_count + v_count)*weight
   score = marks * fraction
   score = 2*(score)
-  score = int(score)
+  score = math.ceil(score)
   score = float(score)/2
-  print("weight"+str(weight))
-  print("fraction"+str(fraction))
+  print("fraction matched: "+str(fraction))
   print("Score: "+str(score)+"/"+str(marks))
   
 
@@ -202,7 +204,9 @@ def nlp_main(teacher_answer:str, student_answer:str,marks:int):
 # def main():
     # student_answer = "Confidentiality: Only the sender and the receiver should be able to understand the contents of the transmitted message. The message may be encrypted due to hackers. This is the most commonly perceived meaning of secure communication. Authentication: Both sender and receiver should be able to confirm the identity of the other party involved in the communication i.e to cofirm that the other party is indeed who or what they claim to be. Message integrity and non-repudiation: Even if the sender and receiver are authenticated, they ensure that the context of their communication is not altered. Message integrity can be ensured by extensions to the checksum techniques that are encountered in reliable transport and data link protocols/ "
     # teacher_answer = "Encryption of the message must be done to prevent hacking. Privacy of the senders and receiver parties must be ensured. The integrity of the message must remain and should not be manipulated. Verification of the parties concerned is necessary."
+    print("Student Answer:")
     processed_student_answer = text_processing(Regex(student_answer))
+    print("Teacher Answer:")
     processed_teacher_answer = text_processing(Regex(teacher_answer))
     matched_phrases,Dict,noun_count,adj_count,verb_count = match_keywords(Regex(student_answer),Regex(teacher_answer))
     sentence = nlp (Regex(student_answer))

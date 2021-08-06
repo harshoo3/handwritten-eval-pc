@@ -39,12 +39,12 @@ def infer(model: Model, fn_img: Path,locations:dict) -> None:
     # """Recognizes text in image provided by file path."""
 
     img = cv2.imread(fn_img, cv2.IMREAD_GRAYSCALE)
-    img = img[820:2800,200:2800]
+    img = img[750:2800,200:2800]
     # img = cv2.resize(img, (600, 400))
     # print(img.shape)
     copy = img.copy()
     copy3 = cv2.imread(fn_img)
-    copy3=copy3[820:2800,200:2800]
+    copy3=copy3[750:2800,200:2800]
     parsed = parse_args()
     answer=''
 
@@ -127,7 +127,7 @@ def infer(model: Model, fn_img: Path,locations:dict) -> None:
         # print(f'Recognized: "{recognized[0]}"')
         # print(f'Probability: {probability[0]}')
 
-    print(answer)
+    # print(answer)
     return answer,copy3
 
 def save_matched_contours(keyword_match_list:list,locations:dict,image,name:str,colors_tuple:list):
@@ -163,6 +163,7 @@ def plot_images(img1,img2):
 
 def plot_an_image(img):
     plt.imshow(img)
+    plt.show()
 
 def create_colors(s:int):
     colors_list = [list(np.random.choice(range(256), size=3))for k in range(s)]
@@ -174,7 +175,6 @@ def main():
     """Main function."""
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--batch_size', help='Batch size.', type=int, default=100)
     parser.add_argument('--marks', help='Marks alloted for this question', type=int, required=True)
     parser.add_argument('--student_answer_text', help='Student Answer String used for inference.', type=str, default=' ')
     parser.add_argument('--teacher_answer_text', help='Teacher Answer String used for inference.', type=str, default=' ')
